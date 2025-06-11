@@ -1,27 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Upload, Image } from 'lucide-react';
 import { NeumorphismButton, NeumorphismCard } from './UI';
 
 const UploadView = ({ handleImageUpload, recentImage }) => {
   const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleDrop = (e) => {
     e.preventDefault();
+    e.stopPropagation();
     setDragActive(false);
     const files = e.dataTransfer.files;
-    if (files.length > 0) {
+    if (files && files.length > 0) {
       handleImageUpload(files[0]);
     }
   };
 
-  const handleDragOver = (e) => {
+  const handleDrag = (e) => {
     e.preventDefault();
-    setDragActive(true);
-  };
-
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setDragActive(false);
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
   };
 
   const handleFileInput = (e) => {
@@ -29,6 +31,12 @@ const UploadView = ({ handleImageUpload, recentImage }) => {
     if (file) {
       handleImageUpload(file);
     }
+    // Reset the input to allow selecting the same file again
+    e.target.value = null;
+  };
+
+  const handleButtonClick = () => {
+    fileInputRef.current.click();
   };
 
   return (
@@ -43,8 +51,9 @@ const UploadView = ({ handleImageUpload, recentImage }) => {
             }
           `}
           onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
+          onDragEnter={handleDrag}
+          onDragOver={handleDrag}
+          onDragLeave={handleDrag}
         >
           <div className="flex flex-col items-center gap-4">
             <div className="p-4 rounded-full bg-gray-200 shadow-inner shadow-gray-300">
@@ -57,19 +66,23 @@ const UploadView = ({ handleImageUpload, recentImage }) => {
               <p className="text-gray-600 mb-4">
                 or click to browse files
               </p>
+              
               <input
+                ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 onChange={handleFileInput}
                 className="hidden"
                 id="fileInput"
               />
-              <label htmlFor="fileInput">
-                <NeumorphismButton className="cursor-pointer inline-flex items-center gap-2">
-                  <Image size={20} />
-                  Choose Image
-                </NeumorphismButton>
-              </label>
+              
+              <NeumorphismButton 
+                onClick={handleButtonClick}
+                className="cursor-pointer inline-flex items-center gap-2"
+              >
+                <Image size={20} />
+                Choose Image
+              </NeumorphismButton>
             </div>
           </div>
         </div>
