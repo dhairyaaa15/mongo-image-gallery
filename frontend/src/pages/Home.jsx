@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navigation from '../components/Navigation';
 import UploadView from '../components/UploadView';
 import GalleryView from '../components/GalleryView';
@@ -9,26 +9,50 @@ export default function Home() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [currentView, setCurrentView] = useState('upload');
 
-  const handleImageUpload = (file) => {
+  useEffect(() => {
+    fetch('http://localhost:5000/api/images/gallery')
+      .then(res => res.json())
+      .then(setImages)
+      .catch(() => setImages([]));
+  }, []);
+
+  const handleImageUpload = async (file) => {
     if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const newImage = {
-          id: Date.now(),
-          src: e.target.result,
-          name: file.name,
-          size: file.size,
-          uploadDate: new Date().toLocaleDateString()
-        };
-        setImages(prev => [...prev, newImage]);
-      };
-      reader.readAsDataURL(file);
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const response = await fetch('http://localhost:5000/api/images/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setImages(prev => [...prev, data.image]);
+        } else {
+          alert(data.message || 'Upload failed');
+        }
+      } catch (err) {
+        alert('Error uploading image');
+      }
     }
   };
 
-  const deleteImage = (id) => {
-    setImages(prev => prev.filter(img => img.id !== id));
-    setSelectedImage(null);
+  const deleteImage = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/images/${id}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        setImages(prev => prev.filter(img => img.id !== id));
+        setSelectedImage(null);
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Delete failed');
+      }
+    } catch (err) {
+      alert('Error deleting image');
+    }
   };
 
   const recentImage = images.length > 0 ? images[images.length - 1] : null;
@@ -47,30 +71,30 @@ export default function Home() {
         </div>
 
         {/* Navigation */}
-        <Navigation 
-          currentView={currentView} 
-          setCurrentView={setCurrentView} 
-          imageCount={images.length} 
+        <Navigation
+          currentView={currentView}
+          setCurrentView={setCurrentView}
+          imageCount={images.length}
         />
 
         {/* Main Content */}
         {currentView === 'upload' ? (
-          <UploadView 
-            handleImageUpload={handleImageUpload} 
-            recentImage={recentImage} 
+          <UploadView
+            handleImageUpload={handleImageUpload}
+            recentImage={recentImage}
           />
         ) : (
-          <GalleryView 
-            images={images} 
-            deleteImage={deleteImage} 
-            setSelectedImage={setSelectedImage} 
+          <GalleryView
+            images={images}
+            deleteImage={deleteImage}
+            setSelectedImage={setSelectedImage}
           />
         )}
 
         {/* Image Modal */}
-        <ImageModal 
-          selectedImage={selectedImage} 
-          setSelectedImage={setSelectedImage} 
+        <ImageModal
+          selectedImage={selectedImage}
+          setSelectedImage={setSelectedImage}
         />
       </div>
     </div>

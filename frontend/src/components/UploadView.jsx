@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Upload, Image } from 'lucide-react';
 import { NeumorphismButton, NeumorphismCard } from './UI';
 
-const UploadView = ({ handleImageUpload, recentImage }) => {
+const UploadView = ({ recentImage, handleImageUpload }) => { // <-- add handleImageUpload prop
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -12,7 +12,7 @@ const UploadView = ({ handleImageUpload, recentImage }) => {
     setDragActive(false);
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
-      handleImageUpload(files[0]);
+      handleImageUpload(files[0]); // <-- use prop
     }
   };
 
@@ -29,9 +29,8 @@ const UploadView = ({ handleImageUpload, recentImage }) => {
   const handleFileInput = (e) => {
     const file = e.target.files[0];
     if (file) {
-      handleImageUpload(file);
+      handleImageUpload(file); // <-- use prop
     }
-    // Reset the input to allow selecting the same file again
     e.target.value = null;
   };
 

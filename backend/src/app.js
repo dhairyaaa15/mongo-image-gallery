@@ -8,7 +8,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173', // Vite dev server default port
+  origin: 'http://localhost:5174', // Vite dev server default port
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
